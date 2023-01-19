@@ -20,7 +20,7 @@ class TestURLUsers(TestCase):
 
     def test_users_public_urls(self):
         """
-        [USERS URLS] Проверяем, что все публичные страницы
+        Проверяем, что все публичные страницы
         корректно работают с анонимным клиентом.
         """
         urls = {
@@ -43,7 +43,7 @@ class TestURLUsers(TestCase):
 
     def test_users_url_login_required(self):
         """
-        [USERS URLS] Проверяем, что определённые страницы
+        Проверяем, что определённые страницы
         редиректят анонимный клиент на логин.
         """
         urls = {
@@ -64,7 +64,7 @@ class TestURLUsers(TestCase):
 
     def test_users_pages_use_correct_templates(self):
         """
-        [USERS URLS] Проверяем, что все страницы
+        Проверяем, что все страницы
         работают с нужным шаблоном.
         """
         urls = {

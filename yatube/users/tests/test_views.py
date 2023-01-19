@@ -19,7 +19,7 @@ class UsersTestViewsTemplates(TestCase):
 
     def test_users_reverse_public_urls_use_correct_template(self):
         """
-        [USERS VIEWS] Проверяем, что реверсивные urls
+        Проверяем, что реверсивные urls
         работают с нужными шаблонами на страницах, где не нужен логин.
         """
         reverse_urls = {
@@ -41,7 +41,7 @@ class UsersTestViewsTemplates(TestCase):
 
     def test_users_reverse_login_required_urls_use_correct_template(self):
         """
-        [USERS VIEWS] Проверяем, что реверсивные urls
+        Проверяем, что реверсивные urls
         работают с нужными шаблонами на страницах, где нужен логин.
         """
         reverse_urls = {
@@ -60,7 +60,7 @@ class UsersTestViewsTemplates(TestCase):
 
     def test_users_signup_form_context(self):
         """
-        [USERS VIEWS] Проверяем, что страница signup передаёт форму
+        Проверяем, что страница signup передаёт форму
         для создания нового пользователя в контекст.
         """
         response = self.guest_client.get(reverse("users:signup"))

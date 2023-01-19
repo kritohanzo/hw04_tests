@@ -26,7 +26,7 @@ class TestPostsForms(TestCase):
 
     def test_posts_valid_form_creates_post(self):
         """
-        [POSTS FORMS] Проверяем, что в случае отправки валидной формы
+        Проверяем, что в случае отправки валидной формы
         создаётся новый пост в базе данных.
         """
         posts_count = Post.objects.count()
@@ -46,7 +46,7 @@ class TestPostsForms(TestCase):
 
     def test_posts_valid_form_edits_post(self):
         """
-        [POSTS FORMS] Проверяем, что в случае отправки валидной формы
+        Проверяем, что в случае отправки валидной формы
         редактируется пост в базе данных.
         """
         form_data = {"text": "Уже не тестовый пост =)", "group": self.group.id}

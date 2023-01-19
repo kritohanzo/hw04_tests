@@ -37,7 +37,7 @@ class PaginatorViewsTest(TestCase):
 
     def test_posts_pages_with_paginators(self):
         """
-        [POSTS VIEWS] Проверяем, соответствует ли ожиданиям
+        Проверяем, соответствует ли ожиданиям
         словарь context cтраниц с паджинатором.
         """
         pages = {
@@ -73,7 +73,7 @@ class TestPostsView(TestCase):
         )
 
     def test_posts_views_use_correct_tamplates(self):
-        """[POSTS VIEWS] Проверяем, что все view используют нужный шаблон."""
+        """Проверяем, что все view используют нужный шаблон."""
         tamplates_page_names = {
             "posts/index.html": reverse("posts:index"),
             "posts/group_list.html": reverse(
@@ -100,7 +100,7 @@ class TestPostsView(TestCase):
 
     def test_posts_view_post_detail_context(self):
         """
-        [POSTS VIEWS] Проверяем, соответствует ли ожиданиям
+        Проверяем, соответствует ли ожиданиям
         словарь context страницы /post_detail/.
         """
         response = self.auth_client.get(
@@ -125,7 +125,7 @@ class TestPostsView(TestCase):
 
     def test_posts_view_post_edit_context(self):
         """
-        [POSTS VIEWS] Проверяем, соответствует ли ожиданиям
+        Проверяем, соответствует ли ожиданиям
         словарь context страницы /post_edit/.
         """
         response = self.auth_client.get(
@@ -140,7 +140,7 @@ class TestPostsView(TestCase):
 
     def test_posts_view_post_create_context(self):
         """
-        [POSTS VIEWS] Проверяем, соответствует ли ожиданиям
+        Проверяем, соответствует ли ожиданиям
         словарь context страницы /post_create/.
         """
         response = self.auth_client.get(
@@ -154,7 +154,8 @@ class TestPostsView(TestCase):
         )
 
     def test_posts_view_post_create(self):
-        """[POSTS VIEWS] Проверяем, что если при создании поста
+        """
+        Проверяем, что если при создании поста
         указать группу, то этот пост появляется на главной странице сайта,
         на странице выбранной группы, в профайле пользователя."""
         pages = {

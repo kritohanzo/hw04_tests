@@ -38,7 +38,7 @@ class StaticURLTests(TestCase):
 
     def test_posts_public_urls(self):
         """
-        [POSTS URLS] Проверяем, что публичные страницы
+        Проверяем, что публичные страницы
         работают с анонимным пользователем.
         """
         public_urls = {
@@ -59,7 +59,7 @@ class StaticURLTests(TestCase):
 
     def test_posts_url_login_required(self):
         """
-        [POSTS URLS] Проверяем, что у страниц /create/ и /posts/post_id/edit/
+        Проверяем, что у страниц /create/ и /posts/post_id/edit/
         работают редиректы на логин с анонимным пользователем.
         """
         public_urls = {
@@ -77,41 +77,41 @@ class StaticURLTests(TestCase):
 
     def test_posts_edit_by_author(self):
         """
-        [POSTS URLS] Проверяем, что cтраница /posts/post_id/edit/
+        Проверяем, что cтраница /posts/post_id/edit/
         работает с автором.
         """
         response = self.auth_client_author.get("/posts/1/edit/")
         self.assertEquals(
             response.status_code,
-            200,
+            HTTPStatus.OK,
             "Страница /posts/1/edit/ работает "
             "не правильно с пользователем-автором.",
         )
 
     def test_posts_edit_by_not_author(self):
         """
-        [POSTS URLS] Проверяем, что cтраница /posts/post_id/edit/
+        Проверяем, что cтраница /posts/post_id/edit/
         не даёт редактировать пост если клиент - не автор.
         """
         response = self.auth_client_not_author.get("/posts/1/edit/")
         self.assertRedirects(
             response,
-            "/posts/1/",
+            f"/posts/{self.post.id}/",
             msg_prefix="Страница /posts/1/edit/ работает "
             "не правильно, если пользователь не автор.",
         )
 
     def test_posts_pages_use_correct_templates(self):
         """
-        [POSTS URLS] Проверяем, что все страницы
+        Проверяем, что все страницы
         используют правильные шаблоны.
         """
         url_templates = {
             "/": "posts/index.html",
             "/group/test-group/": "posts/group_list.html",
             "/profile/post_author/": "posts/profile.html",
-            "/posts/1/": "posts/post_detail.html",
-            "/posts/1/edit/": "posts/create_post.html",
+            f"/posts/{self.post.id}/": "posts/post_detail.html",
+            f"/posts/{self.post.id}/edit/": "posts/create_post.html",
             "/create/": "posts/create_post.html",
         }
         for url, template in url_templates.items():

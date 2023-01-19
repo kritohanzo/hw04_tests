@@ -23,7 +23,7 @@ class TestPostsModels(TestCase):
 
     def test_posts_models_have_correct_method_str(self):
         """
-        [POSTS MODELS] Проверяем, что у моделей
+        Проверяем, что у моделей
         корректно работает __str__.
         """
         models = {self.post: self.post.text[:15], self.group: self.group.title}
@@ -33,7 +33,7 @@ class TestPostsModels(TestCase):
 
     def test_posts_models_have_correct_verbose_name(self):
         """
-        [POSTS MODELS] Проверяем, что у моделей
+        Проверяем, что у моделей
         корректно работает verbose_name.
         """
         post = self.post
@@ -51,7 +51,7 @@ class TestPostsModels(TestCase):
 
     def test_models_have_correct_help_text(self):
         """
-        [POSTS MODELS] Проверяем, что у моделей
+        Проверяем, что у моделей
         корректно работает help_text.
         """
         post = self.post

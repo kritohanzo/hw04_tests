@@ -15,7 +15,7 @@ class TestUsersForms(TestCase):
 
     def test_users_signup_form(self):
         """
-        [USERS FORM] Проверяем, что при заполнении формы
+        Проверяем, что при заполнении формы
         создаётся новый пользователь.
         """
         form_data = {

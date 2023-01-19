@@ -10,7 +10,7 @@ class TestURLAbout(TestCase):
         cls.guest_client = Client()
 
     def test_about_urls(self):
-        """[ABOUT URLS] Проверяем, что все ссылки работают исправно."""
+        """Проверяем, что все ссылки работают исправно."""
         urls = {"/about/author/": HTTPStatus.OK, "/about/tech/": HTTPStatus.OK}
         for url, status in urls.items():
             with self.subTest(url=url):
@@ -22,7 +22,7 @@ class TestURLAbout(TestCase):
                 )
 
     def test_about_urls_use_correct_template(self):
-        """[ABOUT URLS] Проверяем, что все ссылки используют нужные шаблоны."""
+        """Проверяем, что все ссылки используют нужные шаблоны."""
         urls = {
             "/about/author/": "about/author.html",
             "/about/tech/": "about/tech.html",
