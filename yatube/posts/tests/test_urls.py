@@ -64,7 +64,8 @@ class StaticURLTests(TestCase):
         """
         public_urls = {
             "/create/": "/auth/login/?next=/create/",
-            f"/posts/{self.post.id}/edit/": f"/auth/login/?next=/posts/{self.post.id}/edit/",
+            f"/posts/{self.post.id}/edit/": "/auth/login/?next="
+                                            f"/posts/{self.post.id}/edit/",
         }
         for url, redirect_url_with_follow in public_urls.items():
             with self.subTest(url=url):
@@ -93,7 +94,9 @@ class StaticURLTests(TestCase):
         Проверяем, что cтраница /posts/post_id/edit/
         не даёт редактировать пост если клиент - не автор.
         """
-        response = self.auth_client_not_author.get(f"/posts/{self.post.id}/edit/")
+        response = self.auth_client_not_author.get(
+            f"/posts/{self.post.id}/edit/"
+        )
         self.assertRedirects(
             response,
             f"/posts/{self.post.id}/",
