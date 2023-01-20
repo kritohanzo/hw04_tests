@@ -45,7 +45,7 @@ class StaticURLTests(TestCase):
             "/": HTTPStatus.OK,
             "/group/test-group/": HTTPStatus.OK,
             "/profile/post_author/": HTTPStatus.OK,
-            "/posts/1/": HTTPStatus.OK,
+            f"/posts/{self.post.id}/": HTTPStatus.OK,
             "/unexisting_page/": HTTPStatus.NOT_FOUND,
         }
         for url, status_code in public_urls.items():
@@ -64,7 +64,7 @@ class StaticURLTests(TestCase):
         """
         public_urls = {
             "/create/": "/auth/login/?next=/create/",
-            "/posts/1/edit/": "/auth/login/?next=/posts/1/edit/",
+            f"/posts/{self.post.id}/edit/": f"/auth/login/?next=/posts/{self.post.id}/edit/",
         }
         for url, redirect_url_with_follow in public_urls.items():
             with self.subTest(url=url):
@@ -80,11 +80,11 @@ class StaticURLTests(TestCase):
         Проверяем, что cтраница /posts/post_id/edit/
         работает с автором.
         """
-        response = self.auth_client_author.get("/posts/1/edit/")
+        response = self.auth_client_author.get(f"/posts/{self.post.id}/edit/")
         self.assertEquals(
             response.status_code,
             HTTPStatus.OK,
-            "Страница /posts/1/edit/ работает "
+            f"Страница /posts/{self.post.id}/edit/ работает "
             "не правильно с пользователем-автором.",
         )
 
@@ -93,11 +93,11 @@ class StaticURLTests(TestCase):
         Проверяем, что cтраница /posts/post_id/edit/
         не даёт редактировать пост если клиент - не автор.
         """
-        response = self.auth_client_not_author.get("/posts/1/edit/")
+        response = self.auth_client_not_author.get(f"/posts/{self.post.id}/edit/")
         self.assertRedirects(
             response,
             f"/posts/{self.post.id}/",
-            msg_prefix="Страница /posts/1/edit/ работает "
+            msg_prefix=f"Страница /posts/{self.post.id}/edit/ работает "
             "не правильно, если пользователь не автор.",
         )
 
