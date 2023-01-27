@@ -11,7 +11,7 @@
     </h1>
     <h3>Всего постов: {{ page_obj.paginator.count }}</h3>
     {% for post in page_obj %}
-        {% include 'includes/post.html' %}
+        {% include 'posts/includes/post.html' %}
         <a href="{% url 'posts:post_detail' post_id=post.pk %}">подробная информация</a>
         {% if post.group %}
             <br>

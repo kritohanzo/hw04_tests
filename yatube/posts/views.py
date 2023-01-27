@@ -1,9 +1,12 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
 from django.shortcuts import get_object_or_404, redirect, render
-
-from .forms import PostForm
-from .models import Group, Post, User
+from django.views.decorators.cache import cache_page
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic.edit import FormView, CreateView
+from .forms import PostForm, CommentForm
+from django.urls import reverse_lazy
+from .models import Group, Post, User, Comment
 
 
 POSTS_PER_PAGE = 10
@@ -15,7 +18,7 @@ def paginator(request, queryset, number_page):
     page_object = paginator.get_page(page_number)
     return page_object
 
-
+@cache_page(20, key_prefix='index_page')
 def index(request):
     posts = Post.objects.all()
     page_obj = paginator(request, posts, POSTS_PER_PAGE)
@@ -46,6 +49,8 @@ def profile(request, username):
 
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
+    comments = Comment.objects.filter(post=post)
+    comment_form = CommentForm()
     author = post.author
     posts_count = author.posts.count()
     template = "posts/post_detail.html"
@@ -53,27 +58,38 @@ def post_detail(request, post_id):
         "post": post,
         "posts_count": posts_count,
         "user": request.user.id,
+        "comments": comments,
+        "form": comment_form
     }
     return render(request, template, context)
 
+# @login_required
+# def post_create(request):
+#     if request.method == "POST":
+#         form = PostForm(request.POST or None, files=request.FILES or None)
+#         if form.is_valid():
+#             post = form.save(commit=False)
+#             post.author = request.user
+#             post.save()
+#             return redirect("posts:profile", username=post.author.username)
+#         template = "posts/create_post.html"
+#         context = {"form": form}
+#         return render(request, template, context)
+#     form = PostForm()
+#     template = "posts/create_post.html"
+#     context = {"form": form}
+#     return render(request, template, context)
 
-@login_required
-def post_create(request):
-    if request.method == "POST":
-        form = PostForm(request.POST or None, files=request.FILES or None)
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.save()
-            return redirect("posts:profile", username=post.author.username)
-        template = "posts/create_post.html"
-        context = {"form": form}
-        return render(request, template, context)
-    form = PostForm()
-    template = "posts/create_post.html"
-    context = {"form": form}
-    return render(request, template, context)
+class PostCreateView(LoginRequiredMixin, CreateView):
+    template_name = "posts/create_post.html"
+    model = Post
+    form_class = PostForm
 
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.author = self.request.user
+        self.object.save()
+        return redirect(self.get_success_url())
 
 @login_required
 def post_edit(request, post_id):
@@ -92,3 +108,24 @@ def post_edit(request, post_id):
     template = "posts/create_post.html"
     context = {"form": form, "is_edit": 1, "post": post}
     return render(request, template, context)
+
+# @login_required
+# def add_comment(request, post_id):
+#     post = Post.objects.get(pk=post_id)
+#     form = CommentForm(request.POST or None)
+#     if form.is_valid():
+#         comment = form.save(commit=False)
+#         comment.author = request.user
+#         comment.post = post
+#         comment.save()
+#     return redirect('posts:post_detail', post_id=post_id) 
+
+class CommentCreateView(LoginRequiredMixin, CreateView):
+    model = Comment
+    form_class = CommentForm
+    def form_valid(self, form):
+        self.object = form.save(commit=False)
+        self.object.author = self.request.user
+        self.object.post = Post.objects.get(pk=self.request.path.split('/')[2])
+        self.object.save()
+        return redirect(self.get_success_url())

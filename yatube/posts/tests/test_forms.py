@@ -1,7 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
-
+from django.core.files.uploadedfile import SimpleUploadedFile
 from posts.models import Group, Post
 
 
@@ -64,3 +64,30 @@ class TestPostsForms(TestCase):
             form_data["group"],
             "Группа поста не изменилась",
         )
+
+    def test_posts_valid_form_with_image_create_post(self):
+        '''Проверяем, что при отправке поста с картинкой через форму PostForm создаётся запись в базе данных.'''
+        count = Post.objects.count()
+
+        small_gif = (            
+             b'\x47\x49\x46\x38\x39\x61\x02\x00'
+             b'\x01\x00\x80\x00\x00\x00\x00\x00'
+             b'\xFF\xFF\xFF\x21\xF9\x04\x00\x00'
+             b'\x00\x00\x00\x2C\x00\x00\x00\x00'
+             b'\x02\x00\x01\x00\x00\x02\x02\x0C'
+             b'\x0A\x00\x3B'
+        )
+        
+        uploaded = SimpleUploadedFile(
+            name='small.gif',
+            content=small_gif,
+            content_type='image/gif'
+        )
+        new_post = Post.objects.create(
+            text='Тестовый пост 2',
+            author=self.user,
+            group=self.group,
+            image=uploaded
+        )
+        new_count = Post.objects.count()
+        self.assertEqual(new_count, count+1, 'Посты с картинками не создаются.')

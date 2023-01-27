@@ -2,13 +2,15 @@ from datetime import datetime
 import shutil
 import tempfile
 from django.conf import settings
+from time import sleep
 
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
+from django.core.cache import cache
 
 from posts.forms import PostForm
-from posts.views import Group, Post
+from posts.views import Group, Post, Comment
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 
@@ -38,6 +40,9 @@ class PaginatorViewsTest(TestCase):
             post.save()
 
         cls.posts = Post.objects.all()
+
+    def setUp(self):
+        cache.clear()
 
     def test_posts_pages_with_paginators(self):
         """
@@ -75,6 +80,9 @@ class TestPostsView(TestCase):
         cls.post = Post.objects.create(
             text="Тестовый пост 123", author=cls.user, group=cls.group
         )
+    
+    def setUp(self):
+        cache.clear()
 
     def test_posts_views_use_correct_tamplates(self):
         """Проверяем, что все view используют нужный шаблон."""
@@ -171,7 +179,7 @@ class TestPostsView(TestCase):
         for page, args in pages.items():
             with self.subTest(page=page):
                 response = self.auth_client.get(reverse(page, kwargs=args))
-                self.assertEqual(response.context["post"], self.post)
+                self.assertEqual(response.context['page_obj'][self.post.id-1], self.post)
 
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
@@ -218,11 +226,71 @@ class TestPostsImage(TestCase):
     def tearDownClass(cls):
         super().tearDownClass()
         shutil.rmtree(TEMP_MEDIA_ROOT, ignore_errors=True)
-
-
-
+    
+    def setUp(self):
+        cache.clear()
 
     def test_posts_image_in_context(self):
-        '''Проверяем, что при выводе поста с картинкой изображение передаётся в словаре context'''
-        response = self.auth_client.get('/')
-        self.assertEqual(self.post.image, response.context['page_obj'][self.post.id-1].image, 'Плохо')
+        '''Проверяем, что при выводе поста с картинкой изображение передаётся в словаре context.'''
+        urls = {
+            '/': "response.context['page_obj'][self.post.id-1].image",
+            f'/profile/{self.post.author}/': "response.context['page_obj'][self.post.id-1].image",
+            f'/group/{self.group.slug}/': "response.context['page_obj'][self.post.id-1].image",
+            f'/posts/{self.post.id}/': "response.context[0]['post'].image"
+        }
+        for url, expected in urls.items():
+            with self.subTest(url=url, expected=expected):
+                response = self.auth_client.get(url)
+                self.assertEqual(self.post.image, eval(expected), f'Со страницей {url} произошла ошибка.')
+
+class TestPostsCommnets(TestCase):
+    
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = User.objects.create_user(username='Liza')
+        cls.guest_client = Client()
+        cls.auth_client = Client()
+        cls.auth_client.force_login(cls.user)
+        cls.post = Post.objects.create(
+            text='Тестовый пост',
+            author=cls.user
+        )
+    
+    def test_posts_comments_login_required(self):
+        '''Проверяем, что комментировать могут только авторизованные юзеры.'''
+        form_data = {"text":'hello, friend'}
+        response = self.guest_client.post(f'/posts/{self.post.id}/comment/', data=form_data, follow=True)
+        self.assertRedirects(response, f'/auth/login/?next=/posts/{self.post.id}/comment/', msg_prefix=f"Редирект работает не правильно")
+        count = Comment.objects.filter(post=self.post).count()
+        self.auth_client.post(f'/posts/{self.post.id}/comment/', data=form_data, follow=True)
+        new_count = Comment.objects.filter(post=self.post).count()
+        self.assertEqual(new_count, count+1, "Комментарии не создаются авторизованным пользователем.")
+
+    def test_posts_comments_appear_on_the_page(self):
+        '''Проверяем, после успешной отправки комментарий появляется на странице поста.'''
+        form_data = {"text":'test_comment'}
+        self.auth_client.post(f'/posts/{self.post.id}/comment/', data=form_data, follow=True)
+        response = self.guest_client.get(f'/posts/{self.post.id}/')
+        self.assertEqual(form_data['text'], response.context['comments'][0].text, 'Комментарии не появляются на странице')
+
+class TestPostsIndexCache(TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.user = User.objects.create_user(username='Ira')
+        cls.auth_client = Client()
+        cls.auth_client.force_login(cls.user)
+        cls.post = Post.objects.create(
+            text='Тест кеша',
+            author = cls.user
+        )
+    
+    def test_posts_cache_working(self):
+        '''Gроверяем работу кеша'''
+        self.auth_client.get(reverse('posts:index'))
+        self.assertTrue(cache._cache.keys(), 'Главная страница не кешируется.')
+        cache.clear()
+        self.auth_client.get(reverse('posts:profile', kwargs={"username": self.post.author}))
+        self.assertFalse(cache._cache.keys(), 'Почему-то кешируется страница профиля, а такого быть не должно.')

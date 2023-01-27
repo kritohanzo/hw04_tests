@@ -4,7 +4,7 @@
   {% block header %}<h1>{{ group.title }}</h1>{% endblock %}
   <p>{{ group.description }}</p>
   {% for post in page_obj %}
-    {% include 'includes/post.html' %}
+    {% include 'posts/includes/post.html' %}
     <a href="{% url 'posts:post_detail' post_id=post.pk %}">подробная информация</a>
     {% if not forloop.last %}<hr>{% endif %}
   {% endfor %}

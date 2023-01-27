@@ -1,5 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.db import models
+from core.models import CreatedModel
+from django.urls import reverse
 
 
 User = get_user_model()
@@ -21,13 +23,10 @@ class Group(models.Model):
         return self.title
 
 
-class Post(models.Model):
+class Post(CreatedModel):
     text = models.TextField(
         verbose_name="Текст поста",
         help_text="Текст поста, который увидят пользователи",
-    )
-    pub_date = models.DateTimeField(
-        auto_now_add=True, verbose_name="Дата публикации"
     )
     author = models.ForeignKey(
         User,
@@ -57,3 +56,14 @@ class Post(models.Model):
 
     def __str__(self):
         return self.text[:SLICE_OF_THE_FOUND_POST]
+
+    def get_absolute_url(self):
+        return reverse('posts:post_detail', args=[self.id])
+
+class Comment(CreatedModel):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments', verbose_name='Пост', help_text='Пост, к которому относится комментарий')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='comments', verbose_name='Автор комментария', help_text='Автор, написавший комментарий')
+    text = models.TextField(verbose_name='Текст комментария', help_text='Текст комментария, который увидят пользователи')
+
+    def get_absolute_url(self):
+        return reverse('posts:post_detail', args=[self.post.id])
