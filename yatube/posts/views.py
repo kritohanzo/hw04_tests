@@ -6,7 +6,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views.generic.edit import FormView, CreateView
 from .forms import PostForm, CommentForm
 from django.urls import reverse_lazy
-from .models import Group, Post, User, Comment
+from .models import Group, Post, User, Comment, Follow
 
 
 POSTS_PER_PAGE = 10
@@ -43,7 +43,12 @@ def profile(request, username):
     page_number = request.GET.get("page")
     page_obj = paginator.get_page(page_number)
     template = "posts/profile.html"
-    context = {"page_obj": page_obj, "username": author}
+    try:
+        following = Follow.objects.get(author=author, user=request.user)
+        following = True
+    except:
+        following = False
+    context = {"page_obj": page_obj, "username": author, 'following': following}
     return render(request, template, context)
 
 
@@ -129,3 +134,28 @@ class CommentCreateView(LoginRequiredMixin, CreateView):
         self.object.post = Post.objects.get(pk=self.request.path.split('/')[2])
         self.object.save()
         return redirect(self.get_success_url())
+
+@login_required
+def follow_index(request):
+    authors = Follow.objects.filter(user=request.user.id)
+    authors_list = [i.author.id for i in authors]
+    posts = Post.objects.filter(author__in=authors_list)
+    page_obj = paginator(request, posts, POSTS_PER_PAGE)
+    return render(request, 'posts/follow.html', context = {'page_obj': page_obj})
+
+@login_required
+def profile_follow(request, username):
+    author = User.objects.get(username=username)
+    user = request.user
+    Follow.objects.create(
+        author = author,
+        user = user
+    )
+    return redirect('posts:profile', username=username)
+
+@login_required
+def profile_unfollow(request, username):
+    author = User.objects.get(username=username)
+    user = request.user
+    Follow.objects.get(author = author.id, user=user.id).delete()
+    return redirect('posts:profile', username=username)

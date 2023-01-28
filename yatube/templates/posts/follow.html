@@ -1,8 +1,8 @@
 {% extends 'base.html' %}
-{% block title %}Последние обновления на сайте{% endblock %}
+{% block title %}Посты от избранных авторов{% endblock %}
 {% block content %}
   {% include 'posts/includes/switcher.html' %}
-  <h1>Последние обновления на сайте</h1>
+    <h1>Посты от избранных авторов</h1>
     {% for post in page_obj %}
       {% include 'posts/includes/post.html' %}
       <a href="{% url 'posts:post_detail' post_id=post.pk %}">подробная информация</a>

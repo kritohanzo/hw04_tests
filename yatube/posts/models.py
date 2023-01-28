@@ -67,3 +67,7 @@ class Comment(CreatedModel):
 
     def get_absolute_url(self):
         return reverse('posts:post_detail', args=[self.post.id])
+
+class Follow(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='follower', verbose_name='Подписчик')
+    author = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following', verbose_name='Автор')

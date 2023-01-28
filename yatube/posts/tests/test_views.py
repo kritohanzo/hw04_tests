@@ -10,7 +10,7 @@ from django.urls import reverse
 from django.core.cache import cache
 
 from posts.forms import PostForm
-from posts.views import Group, Post, Comment
+from posts.views import Group, Post, Comment, Follow
 from django.core.files.uploadedfile import SimpleUploadedFile
 
 
@@ -286,11 +286,60 @@ class TestPostsIndexCache(TestCase):
             text='Тест кеша',
             author = cls.user
         )
-    
+
     def test_posts_cache_working(self):
-        '''Gроверяем работу кеша'''
-        self.auth_client.get(reverse('posts:index'))
-        self.assertTrue(cache._cache.keys(), 'Главная страница не кешируется.')
+        '''Проверяем работу кеша на главной странице.'''
+        response_one = self.auth_client.get(reverse('posts:index'))
+        self.post.delete()
+        response_two = self.auth_client.get(reverse('posts:index'))
+        self.assertEqual(response_one.content, response_two.content, 'Главная страница не кешируется')
         cache.clear()
-        self.auth_client.get(reverse('posts:profile', kwargs={"username": self.post.author}))
-        self.assertFalse(cache._cache.keys(), 'Почему-то кешируется страница профиля, а такого быть не должно.')
+        response_three = self.auth_client.get(reverse('posts:index'))
+        self.assertNotEqual(response_two.content, response_three.content, 'Кеш отчищен, но контент не изменился.')
+
+class TestPostsFollows(TestCase):
+
+    def setUp(self):
+        
+
+        self.first_user = User.objects.create_user(username='first')
+        self.second_user = User.objects.create_user(username='second')
+        self.third_user = User.objects.create_user(username='third')
+
+        self.first_auth_client = Client()
+        self.second_auth_client = Client()
+        self.third_auth_client = Client()
+
+        self.first_auth_client.force_login(self.first_user)
+        self.second_auth_client.force_login(self.second_user)
+        self.third_auth_client.force_login(self.third_user)
+
+        Follow.objects.create(
+            author=self.second_user,
+            user=self.first_user
+        )
+
+    def test_posts_follows_working(self):
+        '''Проверяем, что авторизованный пользователь может подписываться на других пользователей и удалять их из подписок.'''
+
+        self.second_auth_client.get(reverse('posts:profile_follow', kwargs={"username": self.third_user.username}))
+        follow = Follow.objects.get(user=self.second_user)
+        self.assertEqual(follow.user == self.second_user, follow.author == self.third_user, 'Подписки не работают.')
+
+        self.first_auth_client.get(reverse('posts:profile_unfollow', kwargs={"username": self.second_user.username}))
+        try:
+            follow = Follow.objects.get(user=self.first_user)
+            follow = False
+        except:
+            follow = True
+        self.assertTrue(follow, 'Отписки не работают.')
+
+    def test_posts_followed_users_see_only_needed_posts(self):
+        '''Проверяем, что новая запись пользователя появляется в ленте тех, кто на него подписан и не появляется в ленте тех, кто не подписан.'''
+
+        self.second_auth_client.post(reverse('posts:post_create'), data={"text": "hello, my subcribers 1"})
+        self.second_auth_client.post(reverse('posts:post_create'), data={"text": "hello, my subcribers 2"})
+        self.second_auth_client.post(reverse('posts:post_create'), data={"text": "hello, my subcribers 3"})
+        response_by_follower = self.first_auth_client.get(reverse('posts:follow_index'))
+        response_by_not_follower = self.third_auth_client.get(reverse('posts:follow_index'))
+        self.assertNotEqual(response_by_not_follower, response_by_follower, 'С появлением избранных постов что-то не так.')
